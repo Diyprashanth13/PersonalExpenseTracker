@@ -1,0 +1,5 @@
+{
+  "name": "FinTrack Offline",
+  "description": "A clean, modern, offline-first personal finance tracker with insights and transaction management.",
+  "requestFramePermissions": []
+}
