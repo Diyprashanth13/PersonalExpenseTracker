@@ -1,10 +1,14 @@
 import { Transaction, Category, UserSettings, DashboardSectionConfig } from '../types';
-import { DEFAULT_CATEGORIES } from '../constants';
 import { dbService } from './db';
 import { syncManager } from './sync';
 
 const KEYS = {
   SETTINGS: 'fintrack_settings',
+};
+
+const OLD_KEYS = {
+  TRANSACTIONS: 'fintrack_transactions',
+  CATEGORIES: 'fintrack_categories',
 };
 
 const DEFAULT_DASHBOARD_SECTIONS: DashboardSectionConfig[] = [
@@ -13,47 +17,98 @@ const DEFAULT_DASHBOARD_SECTIONS: DashboardSectionConfig[] = [
   { id: 'ledger', label: 'Recent Ledger', isEnabled: true },
 ];
 
+let isSeeding = false;
+
 export const StorageService = {
-  async getTransactions(): Promise<Transaction[]> {
-    return dbService.getAllTransactions();
-  },
+  async getTransactions(userId: string): Promise<Transaction[]> {
+    let transactions = await dbService.getAllTransactions(userId);
 
-  async saveTransactions(transactions: Transaction[]) {
-    // Note: The store usually passes the whole list, but we want to handle individual updates
-    // In an offline-first app, we'd ideally save them one by one.
-    // For compatibility with the current store logic, we ensure all exist in DB.
-    for (const tx of transactions) {
-      await dbService.saveTransaction(tx);
+    // Migration: Check if we have legacy data in localStorage
+    const legacyData = localStorage.getItem(OLD_KEYS.TRANSACTIONS);
+    if (transactions.length === 0 && legacyData) {
+      try {
+        const parsed = JSON.parse(legacyData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          console.log('Migrating transactions from localStorage to IndexedDB...', parsed.length);
+          for (const tx of parsed) {
+            // Mark migrated data as pending sync so it gets backed up
+            await dbService.saveTransaction(tx, userId, 'pending');
+          }
+          // Refresh from DB
+          transactions = await dbService.getAllTransactions(userId);
+          // Clear legacy data to prevent re-migration
+          localStorage.removeItem(OLD_KEYS.TRANSACTIONS);
+        }
+      } catch (e) {
+        console.error('Failed to migrate transactions', e);
+      }
     }
-    syncManager.sync(); // Attempt sync after save
+
+    return transactions;
   },
 
-  // Added for direct store usage
-  async saveTransaction(tx: Transaction) {
-    await dbService.saveTransaction(tx);
-    syncManager.sync();
+  async saveTransactions(transactions: Transaction[], userId: string) {
+    for (const tx of transactions) {
+      await dbService.saveTransaction(tx, userId);
+    }
+  },
+
+  async saveTransaction(tx: Transaction, userId: string) {
+    await dbService.saveTransaction(tx, userId);
   },
 
   async deleteTransaction(id: string) {
     await dbService.deleteTransaction(id);
-    // Ideally notify backend of deletion too
   },
 
-  async getCategories(): Promise<Category[]> {
-    const cats = await dbService.getAllCategories();
-    return cats.length > 0 ? cats : DEFAULT_CATEGORIES;
-  },
+  async getCategories(userId: string): Promise<Category[]> {
+    let cats = await dbService.getAllCategories(userId);
 
-  async saveCategories(categories: Category[]) {
-    for (const cat of categories) {
-      await dbService.saveCategory(cat);
+    // Migration: Check if we have legacy data in localStorage
+    const legacyData = localStorage.getItem(OLD_KEYS.CATEGORIES);
+    if (cats.length === 0 && legacyData) {
+      try {
+        const parsed = JSON.parse(legacyData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          console.log('Migrating categories from localStorage to IndexedDB...', parsed.length);
+          for (const cat of parsed) {
+            await dbService.saveCategory(cat, userId, 'pending');
+          }
+          cats = await dbService.getAllCategories(userId);
+          localStorage.removeItem(OLD_KEYS.CATEGORIES);
+        }
+      } catch (e) {
+        console.error('Failed to migrate categories', e);
+      }
     }
-    syncManager.sync();
+
+    return cats;
   },
 
-  async saveCategory(cat: Category) {
-    await dbService.saveCategory(cat);
-    syncManager.sync();
+  async seedFactoryDefaults(userId: string): Promise<Category[]> {
+    const { FACTORY_CATEGORIES } = await import('../utils/factoryDefaults');
+    console.log('🌱 Storage: Seeding factory defaults for', userId);
+    const seededCats: Category[] = [];
+    for (const factoryCat of FACTORY_CATEGORIES) {
+      const cat: Category = {
+        ...factoryCat,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await dbService.saveCategory(cat, userId, 'pending');
+      seededCats.push(cat);
+    }
+    return seededCats;
+  },
+
+  async saveCategories(categories: Category[], userId: string) {
+    for (const cat of categories) {
+      await dbService.saveCategory(cat, userId);
+    }
+  },
+
+  async saveCategory(cat: Category, userId: string) {
+    await dbService.saveCategory(cat, userId);
   },
 
   async deleteCategory(id: string) {
@@ -83,6 +138,5 @@ export const StorageService = {
   async clearAll() {
     localStorage.removeItem(KEYS.SETTINGS);
     await dbService.clearAll();
-    window.location.reload();
   }
 };

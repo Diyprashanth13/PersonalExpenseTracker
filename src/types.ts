@@ -6,6 +6,9 @@ export interface Category {
     icon: string;
     color: string;
     type: TransactionType;
+    isDefault?: boolean;
+    createdAt: number;
+    updatedAt: number;
 }
 
 export interface Transaction {
@@ -15,6 +18,9 @@ export interface Transaction {
     categoryId: string;
     date: string; // ISO String
     notes?: string;
+    time?: number; // Milliseconds for ordering
+    createdAt: number;
+    updatedAt: number;
 }
 
 export interface DashboardSectionConfig {

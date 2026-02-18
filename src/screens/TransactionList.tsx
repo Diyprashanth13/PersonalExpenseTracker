@@ -56,7 +56,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
 
                 return matchesSearch && matchesType && matchesCategories && matchesStartDate && matchesEndDate && matchesMinAmount && matchesMaxAmount;
             })
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            .sort((a, b) => {
+                if (b.date !== a.date) return new Date(b.date).getTime() - new Date(a.date).getTime();
+                return (b.time || 0) - (a.time || 0);
+            });
     }, [transactions, categories, search, filters]);
 
     const grouped = useMemo(() => {
@@ -120,8 +123,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
                             key={type}
                             onClick={() => setFilters(prev => ({ ...prev, type: type as any }))}
                             className={`px-4 py-2 rounded-full text-xs font-bold capitalize transition-all whitespace-nowrap ${filters.type === type
-                                    ? 'bg-emerald-600 dark:bg-emerald-500 text-white shadow-md'
-                                    : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800'
+                                ? 'bg-emerald-600 dark:bg-emerald-500 text-white shadow-md'
+                                : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800'
                                 }`}
                         >
                             {type}
@@ -204,8 +207,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
                                             key={cat.id}
                                             onClick={() => toggleCategory(cat.id)}
                                             className={`flex items-center space-x-3 p-3 rounded-2xl border transition-all ${filters.categories.includes(cat.id)
-                                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400'
-                                                    : 'bg-slate-50 dark:bg-slate-800 border-transparent text-slate-600 dark:text-slate-400'
+                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400'
+                                                : 'bg-slate-50 dark:bg-slate-800 border-transparent text-slate-600 dark:text-slate-400'
                                                 }`}
                                         >
                                             <div className="flex-shrink-0 text-lg">{cat.icon}</div>

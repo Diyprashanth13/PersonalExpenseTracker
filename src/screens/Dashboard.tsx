@@ -52,7 +52,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ transactions, categories, 
     ];
 
     const recentTransactions = useMemo(() =>
-        [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4),
+        [...transactions].sort((a, b) => {
+            if (b.date !== a.date) return new Date(b.date).getTime() - new Date(a.date).getTime();
+            return (b.time || 0) - (a.time || 0);
+        }).slice(0, 4),
         [transactions]);
 
     const formatCurrency = (val: number) => {

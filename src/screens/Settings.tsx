@@ -3,11 +3,16 @@ import { UserSettings } from '../types';
 import { ChevronRight, Download, Trash2, ShieldCheck, Github, Sun, Moon, Tags, LayoutDashboard } from 'lucide-react';
 import { StorageService } from '../services/storage';
 import { Link } from 'react-router-dom';
+import { User } from 'firebase/auth';
+import { logout } from '../firebase/auth';
+import { User as UserIcon, LogOut } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 interface SettingsProps {
   settings: UserSettings;
   updateSettings: (s: Partial<UserSettings>) => void;
-  onClearData: () => void;
+  resetApplication: () => Promise<void>;
+  user: User;
 }
 
 const SettingItem = ({ icon: Icon, label, value, onClick, color = "text-slate-500", to }: { icon: any, label: string, value?: string, onClick?: () => void, color?: string, to?: string }) => {
@@ -37,10 +42,11 @@ const SettingItem = ({ icon: Icon, label, value, onClick, color = "text-slate-50
   );
 };
 
-export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, onClearData }) => {
+export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, resetApplication, user }) => {
+  const { showToast } = useToast();
 
-  const handleExport = () => {
-    const data = StorageService.getTransactions();
+  const handleExport = async () => {
+    const data = await StorageService.getTransactions(user.uid);
     const csvContent = "data:text/csv;charset=utf-8,"
       + "Date,Type,Amount,Category,Notes\n"
       + data.map(e => `${e.date},${e.type},${e.amount},${e.categoryId},"${e.notes || ''}"`).join("\n");
@@ -55,9 +61,38 @@ export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, on
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <header>
+      <header className="flex justify-between items-center">
         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">Settings</h1>
       </header>
+
+      <section className="space-y-3">
+        <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4">Account</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-6 transition-colors">
+          <div className="flex items-center space-x-4 mb-6">
+            {user.photoURL ? (
+              <img src={user.photoURL} alt={user.displayName || ''} className="w-16 h-16 rounded-3xl border-4 border-slate-50 shadow-sm" />
+            ) : (
+              <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center border-4 border-white shadow-sm">
+                <UserIcon size={32} />
+              </div>
+            )}
+            <div>
+              <p className="text-lg font-black text-slate-900 dark:text-white leading-tight">{user.displayName || 'User'}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{user.email}</p>
+              <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                Cloud Synced
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => logout()}
+            className="w-full py-4 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl font-bold hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-all flex items-center justify-center gap-2 border border-slate-100 dark:border-slate-700"
+          >
+            <LogOut size={20} />
+            Sign Out
+          </button>
+        </div>
+      </section>
 
       <section className="space-y-3">
         <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4">Preferences</h3>
@@ -96,9 +131,14 @@ export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, on
         <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4">Danger Zone</h3>
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-rose-100 dark:border-rose-900/20 shadow-xl shadow-rose-200/20 dark:shadow-none overflow-hidden transition-colors">
           <button
-            onClick={() => {
-              if (window.confirm('Erase everything? This cannot be undone.')) {
-                onClearData();
+            onClick={async () => {
+              if (window.confirm('⚠️ HEAVY ACTION REQUIRED: This will PERMANENTLY erase all your data from both this device AND the cloud (Firestore). Your categories will be reset to defaults. This cannot be undone.')) {
+                try {
+                  await resetApplication();
+                  showToast('success', 'Application reset to factory state');
+                } catch (err) {
+                  showToast('error', 'Failed to reset application');
+                }
               }
             }}
             className="w-full flex items-center justify-between p-4 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
@@ -108,8 +148,8 @@ export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, on
                 <Trash2 size={20} />
               </div>
               <div className="text-left">
-                <p className="text-sm font-bold text-rose-600 dark:text-rose-400">Reset Application</p>
-                <p className="text-xs text-rose-400 dark:text-rose-600">Clear all local storage and history</p>
+                <p className="text-sm font-bold text-rose-600 dark:text-rose-400">Deep Reset Application</p>
+                <p className="text-xs text-rose-400 dark:text-rose-600">Erase all cloud & local history (irreversible)</p>
               </div>
             </div>
           </button>

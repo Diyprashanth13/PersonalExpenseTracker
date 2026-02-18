@@ -1,57 +1,35 @@
 import { create } from 'zustand';
-import { Transaction, Category, UserSettings } from '../types';
+import { UserSettings } from '../types';
 import { StorageService } from '../services/storage';
 
 interface FinanceState {
-    transactions: Transaction[];
-    categories: Category[];
     settings: UserSettings;
     loading: boolean;
+    currentUserId: string | null;
 
     // Actions
-    fetchData: () => Promise<void>;
-    saveTransaction: (tx: Transaction) => Promise<void>;
-    deleteTransaction: (id: string) => Promise<void>;
-    saveCategory: (cat: Category) => Promise<void>;
-    deleteCategory: (id: string) => Promise<void>;
+    setUserId: (userId: string) => void;
     updateSettings: (newSettings: Partial<UserSettings>) => void;
+    resetApplication: () => Promise<void>;
     clearAllData: () => Promise<void>;
 }
 
 export const useFinanceStore = create<FinanceState>((set, get) => ({
-    transactions: [],
-    categories: [],
     settings: StorageService.getSettings(),
-    loading: true,
+    loading: false,
+    currentUserId: null,
 
-    fetchData: async () => {
-        const transactions = await StorageService.getTransactions();
-        const categories = await StorageService.getCategories();
-        set({ transactions, categories, loading: false });
+    setUserId: (userId: string) => set({ currentUserId: userId }),
+
+    resetApplication: async () => {
+        console.log('⚠️ Store: Application reset requested');
+        await StorageService.clearAll();
+        localStorage.clear();
+        set({ settings: StorageService.getSettings() });
     },
 
-    saveTransaction: async (tx: Transaction) => {
-        await StorageService.saveTransaction(tx);
-        const transactions = await StorageService.getTransactions();
-        set({ transactions });
-    },
-
-    deleteTransaction: async (id: string) => {
-        await StorageService.deleteTransaction(id);
-        const transactions = await StorageService.getTransactions();
-        set({ transactions });
-    },
-
-    saveCategory: async (cat: Category) => {
-        await StorageService.saveCategory(cat);
-        const categories = await StorageService.getCategories();
-        set({ categories });
-    },
-
-    deleteCategory: async (id: string) => {
-        await StorageService.deleteCategory(id);
-        const categories = await StorageService.getCategories();
-        set({ categories });
+    clearAllData: async () => {
+        await StorageService.clearAll();
     },
 
     updateSettings: (newSettings: Partial<UserSettings>) => {
@@ -60,9 +38,5 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             StorageService.saveSettings(nextSettings);
             return { settings: nextSettings };
         });
-    },
-
-    clearAllData: async () => {
-        await StorageService.clearAll();
     }
 }));

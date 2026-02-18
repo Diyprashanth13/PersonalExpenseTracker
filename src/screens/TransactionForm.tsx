@@ -9,7 +9,7 @@ import { CURRENCIES } from '../constants';
 interface TransactionFormProps {
     categories: Category[];
     transactions: Transaction[];
-    onSave: (t: Transaction) => void;
+    onSave: (t: Transaction) => Promise<void>;
     onDelete: (id: string) => void;
 }
 
@@ -47,6 +47,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ categories, tr
         e.preventDefault();
         if (!amount || !categoryId) return;
 
+        const existingTx = isEditing ? transactions.find(tx => tx.id === id) : null;
+
         onSave({
             id: isEditing ? id! : Math.random().toString(36).substr(2, 9),
             amount: parseFloat(amount),
@@ -54,7 +56,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ categories, tr
             categoryId,
             date: new Date(date).toISOString(),
             notes,
-        });
+            time: existingTx?.time || Date.now(),
+            createdAt: existingTx?.createdAt, // Maintain previous or undefined for server
+        } as Transaction);
+
         navigate(-1);
     };
 

@@ -2,10 +2,25 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { syncManager } from './services/sync';
 
-// Initialize background sync logic
-syncManager.sync();
+import { AuthProvider } from './context/AuthContext';
+import { TransactionProvider } from './context/TransactionContext';
+import { ToastProvider } from './context/ToastContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+
+const RootApp = () => {
+  return (
+    <ErrorBoundary>
+      <ToastProvider>
+        <AuthProvider>
+          <TransactionProvider>
+            <App />
+          </TransactionProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
+  );
+};
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -15,7 +30,7 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <RootApp />
   </React.StrictMode>
 );
 
