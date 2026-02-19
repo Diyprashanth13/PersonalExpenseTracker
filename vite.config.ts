@@ -36,8 +36,26 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Precache all static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        navigateFallbackDenylist: [/^\/__\/firebase/, /firestore\.googleapis\.com/],
+
+        // navigateFallback: serve index.html for all navigation requests so the
+        // React app (with HashRouter) can bootstrap and handle the route internally.
+        // Without this, a redirect-back from Google OAuth returns a raw URL that the
+        // service worker can't match, resulting in a network error on installed PWAs.
+        navigateFallback: 'index.html',
+
+        // CRITICAL: Do NOT intercept Firebase Auth callback URLs or Google OAuth URLs.
+        // If these are caught by the SW and served the cached index.html, the redirect
+        // credential in the URL is lost and getRedirectResult() returns null.
+        navigateFallbackDenylist: [
+          /^\/__\/auth/,           // Firebase Auth action handler
+          /^\/__\/firebase/,       // Firebase hosting internals
+          /identitytoolkit\.googleapis\.com/, // Firebase Identity Toolkit
+          /accounts\.google\.com/, // Google OAuth endpoints
+          /firestore\.googleapis\.com/, // Firestore REST API
+        ],
+
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -49,7 +67,8 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
-                statuses: [0, 203]
+                // 0 = opaque (cross-origin), 200 = success. Never cache 203.
+                statuses: [0, 200]
               }
             }
           }

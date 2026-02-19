@@ -5,8 +5,9 @@ import { User } from 'firebase/auth';
 import { logout } from '../firebase/auth';
 import SyncStatusIndicator from './SyncStatusIndicator';
 
-const NavItem = ({ to, icon: Icon, label, active }: { to: string, icon: any, label: string, active: boolean }) => (
+const NavItem = ({ to, icon: Icon, label, active, id }: { to: string, icon: any, label: string, active: boolean, id?: string }) => (
   <Link
+    id={id}
     to={to}
     className={`flex flex-col items-center justify-center space-y-1 w-full py-2 transition-colors ${active ? 'text-emerald-600' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
       }`}
@@ -16,8 +17,9 @@ const NavItem = ({ to, icon: Icon, label, active }: { to: string, icon: any, lab
   </Link>
 );
 
-const DesktopNavItem = ({ to, icon: Icon, label, active }: { to: string, icon: any, label: string, active: boolean }) => (
+const DesktopNavItem = ({ to, icon: Icon, label, active, id }: { to: string, icon: any, label: string, active: boolean, id?: string }) => (
   <Link
+    id={id}
     to={to}
     className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${active ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-semibold shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-700 dark:hover:text-slate-200'
       }`}
@@ -58,9 +60,9 @@ export const Layout: React.FC<{ children: React.ReactNode, theme: 'light' | 'dar
 
           <nav className="flex-1 space-y-1">
             <DesktopNavItem to="/" icon={LayoutDashboard} label="Dashboard" active={isActive('/')} />
-            <DesktopNavItem to="/transactions" icon={ReceiptText} label="History" active={isActive('/transactions')} />
-            <DesktopNavItem to="/insights" icon={PieChart} label="Insights" active={isActive('/insights')} />
-            <DesktopNavItem to="/settings" icon={Settings} label="Settings" active={isActive('/settings')} />
+            <DesktopNavItem id="nav-history-desktop" to="/transactions" icon={ReceiptText} label="History" active={isActive('/transactions')} />
+            <DesktopNavItem id="nav-insights-desktop" to="/insights" icon={PieChart} label="Insights" active={isActive('/insights')} />
+            <DesktopNavItem id="settings-button-desktop" to="/settings" icon={Settings} label="Settings" active={isActive('/settings')} />
           </nav>
 
           <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
@@ -117,18 +119,18 @@ export const Layout: React.FC<{ children: React.ReactNode, theme: 'light' | 'dar
         {/* Mobile Bottom Navigation */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center justify-around px-4 pb-safe-area z-30 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
           <NavItem to="/" icon={LayoutDashboard} label="Home" active={isActive('/')} />
-          <NavItem to="/transactions" icon={ReceiptText} label="List" active={isActive('/transactions')} />
+          <NavItem id="nav-history-mobile" to="/transactions" icon={ReceiptText} label="List" active={isActive('/transactions')} />
           <div className="relative -top-5">
-            <Link to="/add" className="bg-emerald-600 text-white w-14 h-14 rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-transform">
+            <Link id="add-transaction-button-mobile" to="/add" className="bg-emerald-600 text-white w-14 h-14 rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40 flex items-center justify-center transform hover:scale-105 active:scale-95 transition-transform">
               <Plus size={32} />
             </Link>
           </div>
-          <NavItem to="/insights" icon={PieChart} label="Insights" active={isActive('/insights')} />
-          <NavItem to="/settings" icon={Settings} label="More" active={isActive('/settings')} />
+          <NavItem id="nav-insights-mobile" to="/insights" icon={PieChart} label="Insights" active={isActive('/insights')} />
+          <NavItem id="settings-button-mobile" to="/settings" icon={Settings} label="More" active={isActive('/settings')} />
         </nav>
 
         {/* Desktop Floating Add Button */}
-        <Link to="/add" className="hidden md:flex fixed bottom-8 right-8 bg-emerald-600 text-white w-16 h-16 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-emerald-900/40 items-center justify-center hover:bg-emerald-700 transform hover:scale-110 active:scale-95 transition-all group z-10">
+        <Link id="add-transaction-button-desktop" to="/add" className="hidden md:flex fixed bottom-8 right-8 bg-emerald-600 text-white w-16 h-16 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-emerald-900/40 items-center justify-center hover:bg-emerald-700 transform hover:scale-110 active:scale-95 transition-all group z-10">
           <Plus size={32} />
           <span className="absolute right-20 bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">Add Transaction</span>
         </Link>

@@ -21,9 +21,23 @@ const Register: React.FC = () => {
         setError('');
         try {
             await registerWithEmail(email, password);
+            // Profile creation is now embedded in registerWithEmail
             navigate('/');
         } catch (err: any) {
-            setError(err.message || 'Failed to register');
+            console.error('Registration error:', err.code);
+            switch (err.code) {
+                case 'auth/email-already-in-use':
+                    setError('This email is already registered.');
+                    break;
+                case 'auth/invalid-email':
+                    setError('Invalid email address format.');
+                    break;
+                case 'auth/weak-password':
+                    setError('Password is too weak. Use at least 6 characters.');
+                    break;
+                default:
+                    setError(err.message || 'Failed to create account');
+            }
         } finally {
             setLoading(false);
         }

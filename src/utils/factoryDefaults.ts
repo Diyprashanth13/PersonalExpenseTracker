@@ -1,12 +1,20 @@
 import { Category } from '../types';
 
-export const FACTORY_CATEGORIES: Category[] = [
-    { id: 'cat_food', name: 'Food', icon: '🍔', color: '#ef4444', type: 'expense' },
-    { id: 'cat_shopping', name: 'Shopping', icon: '🛍️', color: '#f59e0b', type: 'expense' },
-    { id: 'cat_rent', name: 'Rent', icon: '🏠', color: '#6366f1', type: 'expense' },
-    { id: 'cat_transport', name: 'Transport', icon: '🚗', color: '#0ea5e9', type: 'expense' },
-    { id: 'cat_entertainment', name: 'Entertainment', icon: '🎬', color: '#d946ef', type: 'expense' },
-    { id: 'cat_health', name: 'Health', icon: '🏥', color: '#ec4899', type: 'expense' },
-    { id: 'cat_salary', name: 'Salary', icon: '💰', color: '#10b981', type: 'income' },
-    { id: 'cat_freelance', name: 'Freelance', icon: '💻', color: '#3b82f6', type: 'income' },
+export const DEFAULT_EXPENSE_CATEGORIES: (Omit<Category, 'createdAt' | 'updatedAt' | 'id'>)[] = [
+    { name: "Food", type: "expense", icon: "🍔", color: "#ef4444" },
+    { name: "Transport", type: "expense", icon: "🚗", color: "#0ea5e9" },
+    { name: "Shopping", type: "expense", icon: "🛍️", color: "#f59e0b" },
+    { name: "Entertainment", type: "expense", icon: "🎬", color: "#d946ef" },
+    { name: "Bills", type: "expense", icon: "💡", color: "#6366f1" }
+];
+
+export const DEFAULT_INCOME_CATEGORIES: (Omit<Category, 'createdAt' | 'updatedAt' | 'id'>)[] = [
+    { name: "Salary", type: "income", icon: "💰", color: "#10b981" },
+    { name: "Business", type: "income", icon: "📈", color: "#3b82f6" },
+    { name: "Freelance", type: "income", icon: "💻", color: "#8b5cf6" }
+];
+
+export const FACTORY_CATEGORIES = [
+    ...DEFAULT_EXPENSE_CATEGORIES,
+    ...DEFAULT_INCOME_CATEGORIES
 ];

@@ -1,6 +1,5 @@
 import { Transaction, Category, UserSettings, DashboardSectionConfig } from '../types';
 import { dbService } from './db';
-import { syncManager } from './sync';
 
 const KEYS = {
   SETTINGS: 'fintrack_settings',
@@ -84,23 +83,6 @@ export const StorageService = {
 
     return cats;
   },
-
-  async seedFactoryDefaults(userId: string): Promise<Category[]> {
-    const { FACTORY_CATEGORIES } = await import('../utils/factoryDefaults');
-    console.log('🌱 Storage: Seeding factory defaults for', userId);
-    const seededCats: Category[] = [];
-    for (const factoryCat of FACTORY_CATEGORIES) {
-      const cat: Category = {
-        ...factoryCat,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-      await dbService.saveCategory(cat, userId, 'pending');
-      seededCats.push(cat);
-    }
-    return seededCats;
-  },
-
   async saveCategories(categories: Category[], userId: string) {
     for (const cat of categories) {
       await dbService.saveCategory(cat, userId);
@@ -113,6 +95,39 @@ export const StorageService = {
 
   async deleteCategory(id: string) {
     await dbService.deleteCategory(id);
+  },
+  async resetApplication(userId: string) {
+    console.log('🧹 Storage: Resetting application data for', userId);
+
+    // 1. Clear IndexedDB
+    await dbService.clearAll();
+
+    // 2. Clear Settings
+    localStorage.removeItem(KEYS.SETTINGS);
+
+    // 3. Clear Firestore
+    const { db } = await import('../firebase/firebaseConfig');
+    const { collection, getDocs, deleteDoc, doc, updateDoc } = await import('firebase/firestore');
+
+    const txs = await getDocs(collection(db, 'users', userId, 'transactions'));
+    const cats = await getDocs(collection(db, 'users', userId, 'categories'));
+
+    await Promise.all([
+      ...txs.docs.map(d => deleteDoc(d.ref)),
+      ...cats.docs.map(d => deleteDoc(d.ref))
+    ]);
+
+    // 4. Mark as not initialized to trigger re-seeding
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      hasInitializedDefaults: false
+    });
+
+    // 5. Re-trigger initialization using the architecturally defined method
+    const { initializeUserAccount, auth } = await import('../firebase/auth');
+    if (auth.currentUser) {
+      await initializeUserAccount(auth.currentUser);
+    }
   },
 
   getSettings(): UserSettings {

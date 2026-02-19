@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-api-key",
@@ -13,17 +13,17 @@ const firebaseConfig = {
 
 console.log('🔥 Firebase: Initializing...');
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
 
-// Enable offline persistence
-import { enableIndexedDbPersistence } from 'firebase/firestore';
-enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-        console.warn('🔥 Persistence failed: Multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-        console.warn('🔥 Persistence failed: Browser doesn\'t support persistence');
-    }
+// Auth — persistence is set in auth.ts via setPersistence() before every login action.
+// Setting it here too (at module load) would be a fire-and-forget race; auth.ts handles it properly.
+export const auth = getAuth(app);
+
+// Firestore with proper IndexedDB persistence (replaces deprecated enableIndexedDbPersistence).
+// persistentLocalCache sets up IndexedDB-backed offline cache in modular SDK v9.6+.
+export const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+    }),
 });
 
 export const googleProvider = new GoogleAuthProvider();

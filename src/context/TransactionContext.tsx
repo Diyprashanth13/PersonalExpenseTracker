@@ -4,8 +4,6 @@ import {
     query,
     orderBy,
     onSnapshot,
-    addDoc,
-    updateDoc,
     deleteDoc,
     doc,
     serverTimestamp,
@@ -14,6 +12,7 @@ import {
 import { db } from '../firebase/firebaseConfig';
 import { useAuth } from './AuthContext';
 import { Transaction, Category } from '../types';
+import { StorageService } from '../services/storage';
 
 interface TransactionContextType {
     transactions: Transaction[];
@@ -61,17 +60,19 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 } as Transaction;
             });
             setTransactions(items);
-            setLoading(false);
+            if (!snapshot.metadata.fromCache) {
+                setLoading(false);
+            }
         });
 
-        // CENTRAL CATEGORY LISTENER
+        // SAFE CATEGORY SYNC & LISTENER
         const catQuery = query(
             collection(db, "users", user.uid, "categories"),
             orderBy("createdAt", "desc")
         );
 
-        const unsubCat = onSnapshot(catQuery, (snapshot) => {
-            const items = snapshot.docs.map(doc => {
+        const unsubCat = onSnapshot(catQuery, async (snapshot) => {
+            const cloudItems = snapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
                     ...data,
@@ -80,7 +81,13 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
                     updatedAt: data.updatedAt?.toMillis?.() || data.updatedAt,
                 } as Category;
             });
-            setCategories(items);
+
+            // LOGIC: Just sync cloud items to local state and cache
+            if (!snapshot.empty || !snapshot.metadata.fromCache) {
+                setCategories(cloudItems);
+                // Also update local cache for offline availability
+                await StorageService.saveCategories(cloudItems, user.uid);
+            }
         });
 
         return () => {

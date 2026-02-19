@@ -21,9 +21,13 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
     setUserId: (userId: string) => set({ currentUserId: userId }),
 
-    resetApplication: async () => {
+    resetApplication: async (userId?: string) => {
         console.log('⚠️ Store: Application reset requested');
-        await StorageService.clearAll();
+        if (userId) {
+            await StorageService.resetApplication(userId);
+        } else {
+            await StorageService.clearAll();
+        }
         localStorage.clear();
         set({ settings: StorageService.getSettings() });
     },

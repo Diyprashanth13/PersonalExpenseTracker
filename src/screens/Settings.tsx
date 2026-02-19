@@ -1,17 +1,18 @@
 import React from 'react';
 import { UserSettings } from '../types';
-import { ChevronRight, Download, Trash2, ShieldCheck, Github, Sun, Moon, Tags, LayoutDashboard } from 'lucide-react';
+import { ChevronRight, Download, Trash2, ShieldCheck, Github, Sun, Moon, Tags, LayoutDashboard, Activity, HelpCircle } from 'lucide-react';
 import { StorageService } from '../services/storage';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User } from 'firebase/auth';
 import { logout } from '../firebase/auth';
 import { User as UserIcon, LogOut } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { useTour } from '../context/TourContext';
 
 interface SettingsProps {
   settings: UserSettings;
   updateSettings: (s: Partial<UserSettings>) => void;
-  resetApplication: () => Promise<void>;
+  resetApplication: (userId: string) => Promise<void>;
   user: User;
 }
 
@@ -44,6 +45,8 @@ const SettingItem = ({ icon: Icon, label, value, onClick, color = "text-slate-50
 
 export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, resetApplication, user }) => {
   const { showToast } = useToast();
+  const { startTour } = useTour();
+  const navigate = useNavigate();
 
   const handleExport = async () => {
     const data = await StorageService.getTransactions(user.uid);
@@ -124,6 +127,16 @@ export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, re
             onClick={handleExport}
             color="text-blue-600 dark:text-blue-400"
           />
+          <SettingItem
+            icon={Activity}
+            label="Take a Product Tour"
+            value="Learn how to use FinTrack"
+            onClick={() => {
+              navigate('/'); // Go home where targets are
+              setTimeout(() => startTour(), 500);
+            }}
+            color="text-indigo-600 dark:text-indigo-400"
+          />
         </div>
       </section>
 
@@ -134,7 +147,7 @@ export const Settings: React.FC<SettingsProps> = ({ settings, updateSettings, re
             onClick={async () => {
               if (window.confirm('⚠️ HEAVY ACTION REQUIRED: This will PERMANENTLY erase all your data from both this device AND the cloud (Firestore). Your categories will be reset to defaults. This cannot be undone.')) {
                 try {
-                  await resetApplication();
+                  await resetApplication(user.uid);
                   showToast('success', 'Application reset to factory state');
                 } catch (err) {
                   showToast('error', 'Failed to reset application');

@@ -78,7 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ transactions, categories, 
     );
 
     const renderChart = () => (
-        <section key="chart" className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+        <section id="reports-section" key="chart" className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
             <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 mb-8 uppercase tracking-widest flex items-center">
                 <div className="w-1.5 h-4 bg-emerald-500 rounded-full mr-3"></div>
                 Month Distribution
@@ -109,7 +109,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ transactions, categories, 
     );
 
     const renderLedger = () => (
-        <section key="ledger" className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+        <section id="transactions-list" key="ledger" className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center">
                     <div className="w-1.5 h-4 bg-emerald-500 rounded-full mr-3"></div>
@@ -201,7 +201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ transactions, categories, 
                     </div>
                 </div>
 
-                <div className="mesh-gradient-emerald p-6 rounded-[2.5rem] w-full md:w-80 shadow-2xl shadow-emerald-200 dark:shadow-emerald-900/40 relative overflow-hidden group">
+                <div id="dashboard-summary" className="mesh-gradient-emerald p-6 rounded-[2.5rem] w-full md:w-80 shadow-2xl shadow-emerald-200 dark:shadow-emerald-900/40 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:scale-110 transition-transform">
                         <CreditCard size={120} />
                     </div>

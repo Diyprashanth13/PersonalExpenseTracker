@@ -15,7 +15,7 @@ const SyncStatusIndicator: React.FC = () => {
     const Icon = current.icon;
 
     return (
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${current.bg} ${current.color} transition-all duration-300`}>
+        <div id="sync-indicator" className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${current.bg} ${current.color} transition-all duration-300`}>
             <Icon size={14} className={status === 'syncing' ? 'animate-spin' : ''} />
             <span>{current.label}</span>
         </div>
