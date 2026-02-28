@@ -1,7 +1,7 @@
 {
   "name": "fintrack-offline",
   "private": true,
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,19 +10,25 @@
     "deploy": "vite build && firebase deploy --only hosting"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "date-fns": "^4.1.0",
     "firebase": "^12.9.0",
+    "framer-motion": "^12.34.3",
     "idb": "^8.0.3",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.563.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0",
     "recharts": "^3.7.0",
     "vite-plugin-pwa": "^1.2.0",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.24",
